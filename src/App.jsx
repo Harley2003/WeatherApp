@@ -15,140 +15,9 @@ import {
   Tooltip,
 } from "chart.js";
 
-// Constants
 const ENDPOINT = "https://api.weatherapi.com/v1/forecast.json";
 const APIKEY = "f5ac4be4a19c47d8a3e42522222112";
 
-// Function to fetch weather data
-const getWeather = async (city, countDay = 10) => {
-  const response = await axios.get(
-    `${ENDPOINT}?key=${APIKEY}&q=${city}&days=${countDay}&aqi=no&alerts=yes`
-  );
-  return response.data;
-};
-
-// LineChart component
-// eslint-disable-next-line react/prop-types
-const LineChart = ({ city, date, type }) => {
-  const [dayData, setDayData] = useState([]);
-
-  useEffect(() => {
-    const filterData = async () => {
-      try {
-        const datas = await getWeather(city);
-
-        const dataDate = datas?.forecast?.forecastday?.find(
-          (item) => item.date === date
-        );
-        if (type === "temp") {
-          setDayData([]);
-          dataDate?.hour?.forEach((item) => {
-            setDayData((prev) => [
-              ...prev,
-              { time: item.time, data: item.temp_f },
-            ]);
-          });
-        }
-
-        if (type === "uv") {
-          setDayData([]);
-          dataDate?.hour?.forEach((item) => {
-            setDayData((prev) => [...prev, { time: item.time, data: item.uv }]);
-          });
-        }
-
-        if (type === "humidity") {
-          setDayData([]);
-          dataDate?.hour?.forEach((item) => {
-            setDayData((prev) => [
-              ...prev,
-              { time: item.time, data: item.humidity },
-            ]);
-          });
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    filterData();
-  }, [city, date, type]);
-
-  Chart.register(
-    CategoryScale,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-  );
-
-  const labels = dayData.map((item) => item.time);
-  const dt = dayData.map((item) => item.data);
-
-  const data = {
-    labels: labels,
-    datasets: [
-      {
-        label: `${
-          type === "temp" ? "Temperature" : type === "uv" ? "UV" : "Humidity"
-        }`,
-        data: dt,
-        fill: true,
-        borderColor: `${
-          type === "temp"
-            ? "rgb(75, 192, 192)"
-            : type === "uv"
-            ? "rgb(227, 191, 12)"
-            : "rgb(64, 136, 4)"
-        }`,
-        borderWidth: 1,
-        pointRadius: 0,
-        backgroundColor: `${
-          type === "temp"
-            ? "rgba(5, 86, 86, 0.2)"
-            : type === "uv"
-            ? "rgb(241, 223, 137)"
-            : "rgba(185, 235, 143, 0.2)"
-        }`,
-        tension: 0.7,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    scales: {
-      x: {
-        display: false,
-      },
-      y: {
-        display: false,
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: function (tooltipItem) {
-            return `${tooltipItem.raw} ${
-              type === "temp" ? "°F" : type === "uv" ? "" : "%"
-            }`;
-          },
-        },
-      },
-    },
-  };
-
-  return (
-    <div>
-      <Line data={data} options={options} />
-    </div>
-  );
-};
-
-// App Component
 const App = () => {
   const [city, setCity] = useState("Hà Nội");
   const [weather, setWeather] = useState(null);
@@ -157,6 +26,140 @@ const App = () => {
   const [type, setType] = useState("temp");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
+  const getWeather = async (city, countDay = 10) => {
+    try {
+      const response = await axios.get(
+        `${ENDPOINT}?key=${APIKEY}&q=${city}&days=${countDay}&aqi=no&alerts=yes`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+      return null;
+    }
+  };
+
+  // eslint-disable-next-line react/prop-types
+  const LineChart = ({ city, date, type }) => {
+    const [dayData, setDayData] = useState([]);
+
+    useEffect(() => {
+      const filterData = async () => {
+        try {
+          const datas = await getWeather(city);
+
+          const dataDate = datas?.forecast?.forecastday?.find(
+            (item) => item.date === date
+          );
+          if (type === "temp") {
+            setDayData([]);
+            dataDate?.hour?.forEach((item) => {
+              setDayData((prev) => [
+                ...prev,
+                { time: item.time, data: item.temp_f },
+              ]);
+            });
+          }
+
+          if (type === "uv") {
+            setDayData([]);
+            dataDate?.hour?.forEach((item) => {
+              setDayData((prev) => [
+                ...prev,
+                { time: item.time, data: item.uv },
+              ]);
+            });
+          }
+
+          if (type === "humidity") {
+            setDayData([]);
+            dataDate?.hour?.forEach((item) => {
+              setDayData((prev) => [
+                ...prev,
+                { time: item.time, data: item.humidity },
+              ]);
+            });
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      filterData();
+    }, [city, date, type]);
+
+    Chart.register(
+      CategoryScale,
+      LinearScale,
+      LineElement,
+      PointElement,
+      Title,
+      Tooltip,
+      Legend,
+      Filler
+    );
+
+    const labels = dayData.map((item) => item.time);
+    const dt = dayData.map((item) => item.data);
+
+    const data = {
+      labels: labels,
+      datasets: [
+        {
+          label: `${
+            type === "temp" ? "Temperature" : type === "uv" ? "UV" : "Humidity"
+          }`,
+          data: dt,
+          fill: true,
+          borderColor: `${
+            type === "temp"
+              ? "rgb(75, 192, 192)"
+              : type === "uv"
+              ? "rgb(227, 191, 12)"
+              : "rgb(64, 136, 4)"
+          }`,
+          borderWidth: 1,
+          pointRadius: 0,
+          backgroundColor: `${
+            type === "temp"
+              ? "rgba(5, 86, 86, 0.2)"
+              : type === "uv"
+              ? "rgb(241, 223, 137)"
+              : "rgba(185, 235, 143, 0.2)"
+          }`,
+          tension: 0.7,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      scales: {
+        x: {
+          display: false,
+        },
+        y: {
+          display: false,
+        },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (tooltipItem) {
+              return `${tooltipItem.raw} ${
+                type === "temp" ? "°F" : type === "uv" ? "" : "%"
+              }`;
+            },
+          },
+        },
+      },
+    };
+
+    return (
+      <div>
+        <Line data={data} options={options} />
+      </div>
+    );
+  };
+
   const prevCityRef = useRef();
   const fetchWeatherDebounced = useRef(
     debounce(async (newCity) => {
@@ -164,19 +167,19 @@ const App = () => {
       try {
         const response = await getWeather(newCity);
         setWeather(response);
+        console.log("789");
       } catch (err) {
-        setError("Không thể lấy dữ liệu thời tiết.");
+        setCity("Hà Nội");
       } finally {
         setLoading(false);
       }
-    }, 3000)
+    }, 100)
   ).current;
 
   useEffect(() => {
-    // Prevent unnecessary API calls if the city hasn't changed
     if (prevCityRef.current !== city) {
       fetchWeatherDebounced(city);
-      prevCityRef.current = city; // Update previous city value
+      prevCityRef.current = city;
     }
   }, [city, fetchWeatherDebounced]);
 
@@ -210,7 +213,7 @@ const App = () => {
               type="text"
               value={city}
               onChange={handleCityChange}
-              className="border border-gray-300 rounded px-4 py-2 w-full"
+              className="border border-gray-300 rounded px-4 py-2 w-64" // Cụ thể hóa chiều rộng cho input
               placeholder="Nhập tên thành phố"
               onKeyPress={(e) => handleEnter(e)}
             />
@@ -243,9 +246,10 @@ const App = () => {
 
             <div className="flex items-center mt-4">
               <img
-                className="w-24"
+                className="w-24 "
                 src={weather.current.condition.icon}
                 alt="weather icon"
+                style={{ width: "10rem" }}
               />
               <span className="text-2xl font-bold ml-4">
                 {weather.current.temp_f}°F
@@ -257,7 +261,7 @@ const App = () => {
             </p>
 
             {/* humidyti */}
-            <div className="flex mt-20 ml-5">
+            <div className="flex mt-15 ml-5">
               <div className="mr-6">
                 <p className="text-gray-600 text-xl">Humidity</p>
                 <p className="font-bold text-xl mt-3">
@@ -276,9 +280,6 @@ const App = () => {
           {/* biểu đồ */}
           <div className="w-2/3">
             <div className="flex items-center gap-4">
-              <label className="text-gray-600" htmlFor="type">
-                Loại Dữ Liệu
-              </label>
               <select
                 id="type"
                 value={type}
@@ -295,7 +296,7 @@ const App = () => {
               <LineChart city={city} date={date} type={type} />
 
               {/* hiển thị ngày */}
-              <div className="grid grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-3 gap-4 mt-7">
                 {weather.forecast.forecastday.slice(0, 7).map((day) => {
                   // Lấy ngày hiện tại
                   const today = new Date();
