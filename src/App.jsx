@@ -16,7 +16,7 @@ import {
 } from "chart.js";
 
 // Constants
-const ENDPOINT = "http://api.weatherapi.com/v1/forecast.json";
+const ENDPOINT = "https://api.weatherapi.com/v1/forecast.json";
 const APIKEY = "f5ac4be4a19c47d8a3e42522222112";
 
 // Function to fetch weather data
