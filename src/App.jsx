@@ -173,7 +173,7 @@ const App = () => {
       } finally {
         setLoading(false);
       }
-    }, 100)
+    }, 1000)
   ).current;
 
   useEffect(() => {
