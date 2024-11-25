@@ -87,7 +87,7 @@ const App = () => {
         }
       };
       filterData();
-    }, [city, date, type]); // Dữ liệu sẽ được làm mới khi `date` thay đổi
+    }, [city, date, type]);
 
     Chart.register(
       CategoryScale,
@@ -166,9 +166,8 @@ const App = () => {
   const prevCityRef = useRef();
   const fetchWeatherDebounced = useRef(
     debounce(async (newCity) => {
-      // Nếu tên thành phố trống, không thực hiện gì
       if (!newCity.trim()) {
-        setCity("Hà Nội"); // Đặt lại thành phố mặc định
+        setCity("Hà Nội");
         return;
       }
 
@@ -176,16 +175,14 @@ const App = () => {
       try {
         const response = await getWeather(newCity);
         if (response && response.location) {
-          // Dữ liệu hợp lệ, cập nhật state
           setWeather(response);
-          setCity(newCity); // Cập nhật thành phố
+          setCity(newCity);
         } else {
-          setWeather(null); // Xóa dữ liệu hiện tại
-          setCity("Hà Nội"); // Quay về thành phố mặc định
+          setWeather(null);
+          setCity("Hà Nội");
         }
       } catch (err) {
         console.error("Lỗi khi lấy dữ liệu thời tiết:", err);
-        // Nếu có lỗi, giữ lại thành phố Hà Nội
         setCity("Hà Nội");
         setWeather(null);
       } finally {
@@ -193,7 +190,6 @@ const App = () => {
       }
     }, 1000)
   ).current;
-
   useEffect(() => {
     if (prevCityRef.current !== city) {
       fetchWeatherDebounced(city);
@@ -205,7 +201,7 @@ const App = () => {
     setCity(e.target.value);
   };
 
-  const handleEnter = (e) => {
+  const handleEnter = async (e) => {
     if (e.key === "Enter") {
       const cityName = e.target.value.trim();
 
@@ -214,7 +210,12 @@ const App = () => {
         return;
       }
 
-      setCity(cityName);
+      const response = await getWeather(cityName);
+      if (response && response.location) {
+        setCity(cityName);
+      } else {
+        setCity("Hà Nội");
+      }
     }
   };
 
@@ -238,7 +239,7 @@ const App = () => {
               type="text"
               value={city}
               onChange={handleCityChange}
-              className="border border-gray-300 rounded px-4 py-2 w-64" // Cụ thể hóa chiều rộng cho input
+              className="border border-gray-300 rounded px-4 py-2 w-64"
               placeholder="Nhập tên thành phố"
               onKeyPress={(e) => handleEnter(e)}
             />
@@ -322,15 +323,12 @@ const App = () => {
               {/* hiển thị ngày */}
               <div className="grid grid-cols-3 gap-4 mt-7">
                 {weather.forecast.forecastday.slice(0, 7).map((day) => {
-                  // Lấy ngày hiện tại
                   const today = new Date();
                   const dayDate = new Date(day.date);
 
-                  // Kiểm tra nếu ngày là hôm nay
                   const isToday =
                     today.toDateString() === dayDate.toDateString();
 
-                  // Format ngày tháng cho các ngày không phải hôm nay
                   const formattedDate = isToday
                     ? "Today"
                     : `${dayDate.toLocaleString("en-US", {
@@ -345,10 +343,10 @@ const App = () => {
                           ? "bg-blue-500 text-white"
                           : "bg-gray-100"
                       } p-4 rounded-lg shadow-md text-center cursor-pointer`}
-                      onClick={() => handleDateClick(day.date)} // Xử lý khi click vào ngày
+                      onClick={() => handleDateClick(day.date)}
                     >
                       <p className="font-semibold">{formattedDate}</p>
-                      {/* Hiển thị biểu tượng thời tiết */}
+
                       <img
                         className="w-12 mx-auto"
                         src={day.day.condition.icon}
