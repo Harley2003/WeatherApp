@@ -25,6 +25,9 @@ const App = () => {
   const [error, setError] = useState(null);
   const [type, setType] = useState("temp");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const handleDateClick = (clickedDate) => {
+    setDate(clickedDate);
+  };
 
   const getWeather = async (city, countDay = 10) => {
     try {
@@ -84,7 +87,7 @@ const App = () => {
         }
       };
       filterData();
-    }, [city, date, type]);
+    }, [city, date, type]); // Dữ liệu sẽ được làm mới khi `date` thay đổi
 
     Chart.register(
       CategoryScale,
@@ -163,13 +166,28 @@ const App = () => {
   const prevCityRef = useRef();
   const fetchWeatherDebounced = useRef(
     debounce(async (newCity) => {
+      // Nếu tên thành phố trống, không thực hiện gì
+      if (!newCity.trim()) {
+        setCity("Hà Nội"); // Đặt lại thành phố mặc định
+        return;
+      }
+
       setLoading(true);
       try {
         const response = await getWeather(newCity);
-        setWeather(response);
-        console.log("789");
+        if (response && response.location) {
+          // Dữ liệu hợp lệ, cập nhật state
+          setWeather(response);
+          setCity(newCity); // Cập nhật thành phố
+        } else {
+          setWeather(null); // Xóa dữ liệu hiện tại
+          setCity("Hà Nội"); // Quay về thành phố mặc định
+        }
       } catch (err) {
+        console.error("Lỗi khi lấy dữ liệu thời tiết:", err);
+        // Nếu có lỗi, giữ lại thành phố Hà Nội
         setCity("Hà Nội");
+        setWeather(null);
       } finally {
         setLoading(false);
       }
@@ -189,7 +207,14 @@ const App = () => {
 
   const handleEnter = (e) => {
     if (e.key === "Enter") {
-      setCity(e.target.value);
+      const cityName = e.target.value.trim();
+
+      if (cityName === "") {
+        setCity("Hà Nội");
+        return;
+      }
+
+      setCity(cityName);
     }
   };
 
@@ -219,7 +244,6 @@ const App = () => {
             />
           </div>
         </div>
-
         <div className="flex space-x-6 mb-4 mt-[2rem] ml-10">
           {/* ngày tháng năm */}
           <div className="flex flex-col gap-6 w-2/3">
@@ -317,8 +341,11 @@ const App = () => {
                     <div
                       key={day.date}
                       className={`${
-                        isToday ? "bg-blue-500 text-white" : "bg-gray-100"
-                      } p-4 rounded-lg shadow-md text-center`}
+                        date === day.date
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100"
+                      } p-4 rounded-lg shadow-md text-center cursor-pointer`}
+                      onClick={() => handleDateClick(day.date)} // Xử lý khi click vào ngày
                     >
                       <p className="font-semibold">{formattedDate}</p>
                       {/* Hiển thị biểu tượng thời tiết */}
@@ -339,7 +366,6 @@ const App = () => {
             </div>
           </div>
         </div>
-
         <div className="flex space-x-6 mb-4 ml-35"></div>
       </div>
     </div>
