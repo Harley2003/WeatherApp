@@ -27,6 +27,24 @@ const App = () => {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const handleDateClick = (clickedDate) => {
     setDate(clickedDate);
+    updateCurrentWeather(clickedDate);
+  };
+  const updateCurrentWeather = async (selectedDate) => {
+    const datas = await getWeather(city);
+    const dataDate = datas?.forecast?.forecastday?.find(
+      (item) => item.date === selectedDate
+    );
+
+    if (dataDate) {
+      setWeather((prev) => ({
+        ...prev,
+        current: {
+          ...prev.current,
+          temp_f: dataDate.day.avgtemp_f, // Cập nhật nhiệt độ trung bình
+          condition: dataDate.day.condition, // Cập nhật điều kiện thời tiết
+        },
+      }));
+    }
   };
 
   const getWeather = async (city, countDay = 10) => {
